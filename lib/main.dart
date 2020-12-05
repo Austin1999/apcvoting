@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:webapp/User.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:webapp/login_page.dart';
+import 'package:webapp/thankyou.dart';
 
 import 'User.dart';
 import 'User.dart';

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:grouped_buttons/grouped_buttons.dart';
+import 'package:webapp/thankyou.dart';
 
 class UserPage extends StatefulWidget {
   @override
@@ -84,19 +85,34 @@ class _UserPageState extends State<UserPage> {
                                     duration: Duration(milliseconds: 1000),
                                     curve: Curves.easeOutQuad);
                               })),
-                      FlatButton(
-                        color: Colors.pink,
-                        child: Center(
-                            child: Text(
-                          'Next',
-                          style: TextStyle(color: Colors.white),
-                        )),
-                        onPressed: () {
-                          controller.nextPage(
-                              duration: Duration(milliseconds: 1000),
-                              curve: Curves.easeOutQuad);
-                        },
-                      ),
+                      snapshot.data.docs.length == pageindex
+                          ? FlatButton(
+                              color: Colors.pink,
+                              child: Center(
+                                  child: Text(
+                                'Submit',
+                                style: TextStyle(color: Colors.white),
+                              )),
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => ThankyouPage()));
+                              },
+                            )
+                          : FlatButton(
+                              color: Colors.pink,
+                              child: Center(
+                                  child: Text(
+                                'Next',
+                                style: TextStyle(color: Colors.white),
+                              )),
+                              onPressed: () {
+                                controller.nextPage(
+                                    duration: Duration(milliseconds: 1000),
+                                    curve: Curves.easeOutQuad);
+                              },
+                            ),
                     ],
                   ),
                 ],
@@ -131,7 +147,7 @@ class _RadioGroupState extends State<RadioGroup> {
             disabled = widget.snapshot.data.docs[widget.j.key].get('PEOPLES');
             FirebaseFirestore.instance
                 .collection('APC-VOTING')
-                .doc(widget.snapshot.data.docs[widget.j.key])
+                .doc(widget.snapshot.data.docs[widget.j.key].id)
                 .update({
               people: FieldValue.increment(1),
             });
