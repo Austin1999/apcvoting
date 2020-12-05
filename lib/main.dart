@@ -4,6 +4,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:webapp/login_page.dart';
 
 import 'User.dart';
+import 'User.dart';
+import 'admin_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

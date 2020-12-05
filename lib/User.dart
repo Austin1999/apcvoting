@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-// import 'user_management.dart';
+import 'package:grouped_buttons/grouped_buttons.dart';
 
 class UserPage extends StatefulWidget {
   @override
@@ -8,102 +8,134 @@ class UserPage extends StatefulWidget {
 }
 
 class _UserPageState extends State<UserPage> {
-  var asd;
-  List ite = [];
-  // @override
-  // void initState() {
-  //   // TODO: implement initState
-  //   super.initState();
-  //   // FetchData();
-  // }
-
-  // FetchData() async {
-  //   dynamic resultant = await UserManagement().getPeopleList();
-  //   if (resultant == null) {
-  //     print('unable to fetch data');
-  //   } else {
-  //     setState(() {
-  //       ite = resultant;
-  //       print(asd);
-  //     });
-  //   }
-  // }
-
+  bool ischecked = false;
+  int pageindex = 0;
+  int stepCounter = 0;
+  PageController controller = PageController(viewportFraction: 0.7);
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            height: 600,
-            width: 500,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(35)),
-              color: Color(0xFFedeeef),
-            ),
-            child: StreamBuilder<QuerySnapshot>(
-                stream: Firestore.instance.collection('APC-VOTING').snapshots(),
-                builder: (BuildContext context,
-                    AsyncSnapshot<QuerySnapshot> snapshot) {
-                  if (snapshot.hasData) {
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      scrollDirection: Axis.horizontal,
-                      itemCount: ite.length,
-                      itemBuilder: (context, index) {
-                        var data = snapshot.data.docs[index];
-                        print(data.get('HEADING'));
-                        return GridTile(
-                            child: SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              Text(
-                                data.get('HEADING'),
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20),
-                              ),
-                              for (var asd in ite[index]['PEOPLES']
-                                  .toString()
-                                  .replaceAll('[', '')
-                                  .replaceAll(']', '')
-                                  .split(','))
-                                // Text( ite[index]['HEADING'].toString()),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: FlatButton(
-                                    color: Colors.blue,
-                                    onPressed: () {
-                                      // var indexval = ite[index]['PEOPLES'].indexOf(asd);
-                                      print(asd);
-                                      print('${data.get(index)}');
-                                      FirebaseFirestore.instance
-                                          .collection('APC-VOTING')
-                                          .doc(data.id)
-                                          .update(
-                                              {asd: FieldValue.increment(1)});
-                                    },
-                                    child: Text(
-                                      asd,
-                                      style: TextStyle(
-                                          color: Colors.black, fontSize: 10),
-                                    ),
+    return SafeArea(
+      child: Scaffold(
+        body: StreamBuilder(
+          stream:
+              FirebaseFirestore.instance.collection('APC-VOTING').snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            } else {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    height: MediaQuery.of(context).size.height * 0.7,
+                    child: Center(
+                      child: PageView(
+                        scrollDirection: Axis.horizontal,
+                        controller: controller,
+                        physics: NeverScrollableScrollPhysics(),
+                        onPageChanged: (int index) {
+                          setState(() {
+                            pageindex = index;
+                          });
+                        },
+                        children: [
+                          for (MapEntry j in snapshot.data.docs.asMap().entries)
+                            Container(
+                              height: MediaQuery.of(context).size.height * 0.7,
+                              child: Card(
+                                shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.all(
+                                        Radius.circular(10.0))),
+                                clipBehavior: Clip.antiAlias,
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    children: [
+                                      Center(
+                                        child: Text(
+                                          snapshot.data.docs[j.key]
+                                              .get('HEADING'),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .headline,
+                                        ),
+                                      ),
+                                      RadioGroup(snapshot, j),
+                                    ],
                                   ),
                                 ),
-                            ],
-                          ),
-                        ));
-                      },
-                    );
-                  } else {
-                    return Container();
-                  }
-                }),
-          ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: FlatButton(
+                              color: Colors.white,
+                              child: Center(child: Text('Back')),
+                              onPressed: () {
+                                controller.previousPage(
+                                    duration: Duration(milliseconds: 1000),
+                                    curve: Curves.easeOutQuad);
+                              })),
+                      FlatButton(
+                        color: Colors.pink,
+                        child: Center(
+                            child: Text(
+                          'Next',
+                          style: TextStyle(color: Colors.white),
+                        )),
+                        onPressed: () {
+                          controller.nextPage(
+                              duration: Duration(milliseconds: 1000),
+                              curve: Curves.easeOutQuad);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            }
+          },
         ),
       ),
     );
+  }
+}
+
+class RadioGroup extends StatefulWidget {
+  final snapshot, j;
+  RadioGroup(this.snapshot, this.j);
+  @override
+  _RadioGroupState createState() => _RadioGroupState();
+}
+
+class _RadioGroupState extends State<RadioGroup> {
+  String people;
+  List disabled = [];
+  @override
+  Widget build(BuildContext context) {
+    return RadioButtonGroup(
+        labels: widget.snapshot.data.docs[widget.j.key].get('PEOPLES'),
+        picked: people,
+        disabled: disabled,
+        onSelected: (String selected) {
+          setState(() {
+            people = selected;
+            disabled = widget.snapshot.data.docs[widget.j.key].get('PEOPLES');
+            FirebaseFirestore.instance
+                .collection('APC-VOTING')
+                .doc(widget.snapshot.data.docs[widget.j.key])
+                .update({
+              people: FieldValue.increment(1),
+            });
+          });
+        });
   }
 }
